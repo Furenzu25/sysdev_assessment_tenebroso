@@ -175,7 +175,7 @@ curl -X POST http://localhost:3000/members \
   -d '{"email": "user@example.com", "firstName": "John", "lastName": "Doe", "membershipNumber": "MEM001"}'
 ```
 
-## 📊 Business Rules
+## 📊 Some Validation Rules
 
 ### Borrowing Rules
 - Members can borrow up to 5 books simultaneously
@@ -193,24 +193,8 @@ curl -X POST http://localhost:3000/members \
 - Unique constraints prevent duplicate entries
 - Soft deletes maintain referential integrity
 
-## 🚀 Deployment
 
-### Production Build
-```bash
-npm run build
-npm run start:prod
-```
 
-### Docker Deployment
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY dist ./dist
-EXPOSE 3000
-CMD ["node", "dist/src/main.js"]
-```
 
 ## 🤝 Contributing
 
