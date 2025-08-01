@@ -20,18 +20,31 @@ export class CategoriesService {
   }
 
   async findOne(id: string) {
-    const category = await this.prisma.category.findUnique({
-      where: { id },
-      include: {
-        books: true,
-      },
-    });
-
-    if (!category) {
+    // Validate ID format (basic validation for Prisma ID format)
+    if (!id || typeof id !== 'string' || id.length < 10) {
       throw new NotFoundException(`Category with ID ${id} not found`);
     }
 
-    return category;
+    try {
+      const category = await this.prisma.category.findUnique({
+        where: { id },
+        include: {
+          books: true,
+        },
+      });
+
+      if (!category) {
+        throw new NotFoundException(`Category with ID ${id} not found`);
+      }
+
+      return category;
+    } catch (error) {
+      // Handle Prisma errors gracefully
+      if (error.code === 'P2023') {
+        throw new NotFoundException(`Category with ID ${id} not found`);
+      }
+      throw error;
+    }
   }
 
   async update(id: string, updateCategoryDto: Partial<CreateCategoryDto>) {

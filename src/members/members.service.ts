@@ -7,35 +7,21 @@ export class MembersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createMemberDto: CreateMemberDto) {
-    try {
-      // Prisma handles unique constraints (email, membershipNumber) at database level
-      const member = await this.prisma.member.create({
-        data: createMemberDto,
-        include: {
-          borrowings: {
-            include: {
-              edition: {
-                include: {
-                  book: true
-                }
+    // Prisma handles unique constraints (email, membershipNumber) at database level
+    return this.prisma.member.create({
+      data: createMemberDto,
+      include: {
+        borrowings: {
+          include: {
+            edition: {
+              include: {
+                book: true
               }
             }
           }
         }
-      });
-
-      return member;
-    } catch (error) {
-      // Log the error for debugging
-      console.error('Error creating member:', {
-        error: error.message,
-        code: error.code,
-        data: createMemberDto
-      });
-      
-      // Re-throw the error to be handled by the exception filter
-      throw error;
-    }
+      }
+    });
   }
 
   async findAll() {
@@ -55,26 +41,44 @@ export class MembersService {
   }
 
   async findOne(id: string) {
-    const member = await this.prisma.member.findUnique({
-      where: { id },
-      include: {
-        borrowings: {
-          include: {
-            edition: {
-              include: {
-                book: true
+    // Validate ID format (basic validation for Prisma ID format)
+    if (!id || typeof id !== 'string' || id.length < 10) {
+      throw new NotFoundException(`Member with ID ${id} not found`);
+    }
+
+    // Additional validation for Prisma ID format (should start with specific pattern)
+    if (!id.match(/^[a-zA-Z0-9]{20,}$/)) {
+      throw new NotFoundException(`Member with ID ${id} not found`);
+    }
+
+    try {
+      const member = await this.prisma.member.findUnique({
+        where: { id },
+        include: {
+          borrowings: {
+            include: {
+              edition: {
+                include: {
+                  book: true
+                }
               }
             }
           }
         }
+      });
+
+      if (!member) {
+        throw new NotFoundException(`Member with ID ${id} not found`);
       }
-    });
 
-    if (!member) {
-      throw new NotFoundException(`Member with ID ${id} not found`);
+      return member;
+    } catch (error) {
+      // Handle Prisma errors gracefully
+      if (error.code === 'P2023') {
+        throw new NotFoundException(`Member with ID ${id} not found`);
+      }
+      throw error;
     }
-
-    return member;
   }
 
   async findByEmail(email: string) {

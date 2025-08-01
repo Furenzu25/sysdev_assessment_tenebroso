@@ -45,28 +45,41 @@ export class BooksService {
   }
 
   async findOne(id: string) {
-    const book = await this.prisma.book.findUnique({
-      where: { id },
-      include: {
-        category: true,
-        bookAuthors: {
-          include: {
-            author: true
-          }
-        },
-        editions: {
-          include: {
-            publisher: true
-          }
-        }
-      }
-    });
-
-    if (!book) {
+    // Validate ID format (basic validation for Prisma ID format)
+    if (!id || typeof id !== 'string' || id.length < 10) {
       throw new NotFoundException(`Book with ID ${id} not found`);
     }
 
-    return book;
+    try {
+      const book = await this.prisma.book.findUnique({
+        where: { id },
+        include: {
+          category: true,
+          bookAuthors: {
+            include: {
+              author: true
+            }
+          },
+          editions: {
+            include: {
+              publisher: true
+            }
+          }
+        }
+      });
+
+      if (!book) {
+        throw new NotFoundException(`Book with ID ${id} not found`);
+      }
+
+      return book;
+    } catch (error) {
+      // Handle Prisma errors gracefully
+      if (error.code === 'P2023') {
+        throw new NotFoundException(`Book with ID ${id} not found`);
+      }
+      throw error;
+    }
   }
 
   async findByIsbn(isbn: string) {

@@ -5,12 +5,9 @@ import { AppModule } from './app.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { BusinessExceptionFilter } from './common/filters/business-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { LoggerService } from './common/services/logger.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {
-    logger: new LoggerService(),
-  });
+  const app = await NestFactory.create(AppModule);
 
   // Enable CORS
   app.enableCors({
@@ -53,9 +50,8 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port);
   
-  const logger = new LoggerService().setContext('Bootstrap');
-  logger.log(`🚀 Application is running on: http://localhost:${port}`);
-  logger.log(`📚 API Documentation available at: http://localhost:${port}/api`);
-  logger.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🚀 Application is running on: http://localhost:${port}`);
+  console.log(`📚 API Documentation available at: http://localhost:${port}/api`);
+  console.log(`🔧 Environment: ${process.env.NODE_ENV || 'development'}`);
 }
 bootstrap();

@@ -1,24 +1,19 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBorrowingDto } from '../dto/create-borrowing.dto';
-import { LoggerService } from '../common/services/logger.service';
 
 @Injectable()
 export class BorrowingsService {
-  private readonly logger = new LoggerService().setContext('BorrowingsService');
-
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createBorrowingDto: CreateBorrowingDto) {
-    this.logger.log(`Creating borrowing for member ${createBorrowingDto.memberId}`);
-
     // Check if member exists and is active
     const member = await this.prisma.member.findUnique({
       where: { id: createBorrowingDto.memberId },
     });
 
     if (!member) {
-      throw new NotFoundException('Member not found');
+      throw new NotFoundException(`Member with ID ${createBorrowingDto.memberId} not found`);
     }
 
     if (!member.isActive) {
@@ -32,7 +27,7 @@ export class BorrowingsService {
     });
 
     if (!edition) {
-      throw new NotFoundException('Book edition not found');
+      throw new NotFoundException(`Book edition with ID ${createBorrowingDto.editionId} not found`);
     }
 
     if (edition.availableQuantity <= 0) {
@@ -100,7 +95,6 @@ export class BorrowingsService {
       return newBorrowing;
     });
 
-    this.logger.log(`Borrowing created successfully: ${borrowing.id}`);
     return borrowing;
   }
 
@@ -120,24 +114,37 @@ export class BorrowingsService {
   }
 
   async findOne(id: string) {
-    const borrowing = await this.prisma.borrowing.findUnique({
-      where: { id },
-      include: {
-        member: true,
-        edition: {
-          include: {
-            book: true,
-            publisher: true,
-          },
-        },
-      },
-    });
-
-    if (!borrowing) {
+    // Validate ID format (basic validation for Prisma ID format)
+    if (!id || typeof id !== 'string' || id.length < 10) {
       throw new NotFoundException(`Borrowing with ID ${id} not found`);
     }
 
-    return borrowing;
+    try {
+      const borrowing = await this.prisma.borrowing.findUnique({
+        where: { id },
+        include: {
+          member: true,
+          edition: {
+            include: {
+              book: true,
+              publisher: true,
+            },
+          },
+        },
+      });
+
+      if (!borrowing) {
+        throw new NotFoundException(`Borrowing with ID ${id} not found`);
+      }
+
+      return borrowing;
+    } catch (error) {
+      // Handle Prisma errors gracefully
+      if (error.code === 'P2023') {
+        throw new NotFoundException(`Borrowing with ID ${id} not found`);
+      }
+      throw error;
+    }
   }
 
   async findByMember(memberId: string) {
@@ -191,8 +198,6 @@ export class BorrowingsService {
   }
 
   async returnBook(id: string) {
-    this.logger.log(`Processing return for borrowing ${id}`);
-
     const borrowing = await this.findOne(id);
 
     if (borrowing.status === 'RETURNED') {
@@ -210,7 +215,6 @@ export class BorrowingsService {
         (new Date().getTime() - borrowing.dueDate.getTime()) / (1000 * 60 * 60 * 24)
       );
       fineAmount = daysOverdue * 0.50; // $0.50 per day
-      this.logger.warn(`Overdue book returned. Fine calculated: $${fineAmount}`);
     }
 
     const updatedBorrowing = await this.prisma.$transaction(async (prisma) => {
@@ -245,13 +249,10 @@ export class BorrowingsService {
       return returnedBorrowing;
     });
 
-    this.logger.log(`Book returned successfully: ${id}`);
     return updatedBorrowing;
   }
 
   async markAsLost(id: string) {
-    this.logger.log(`Marking borrowing ${id} as lost`);
-
     const borrowing = await this.findOne(id);
 
     if (borrowing.status === 'RETURNED') {
@@ -287,7 +288,6 @@ export class BorrowingsService {
       },
     });
 
-    this.logger.warn(`Book marked as lost: ${id}. Replacement cost: $${replacementCost}`);
     return updatedBorrowing;
   }
 
