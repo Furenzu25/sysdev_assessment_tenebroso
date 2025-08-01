@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { BooksService } from './books.service';
-import { CreateBookDto } from '../dto/create-book.dto';
+import { CreateBookDto } from './dto/create-book.dto';
 
 @ApiTags('books')
 @Controller('books')

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateMemberDto } from '../dto/create-member.dto';
+import { CreateMemberDto } from './dto/create-member.dto';
 
 @Injectable()
 export class MembersService {

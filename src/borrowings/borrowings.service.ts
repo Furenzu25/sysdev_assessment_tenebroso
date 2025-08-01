@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateBorrowingDto } from '../dto/create-borrowing.dto';
+import { CreateBorrowingDto } from './dto/create-borrowing.dto';
 
 @Injectable()
 export class BorrowingsService {

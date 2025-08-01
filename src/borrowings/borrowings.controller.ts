@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { BorrowingsService } from './borrowings.service';
-import { CreateBorrowingDto } from '../dto/create-borrowing.dto';
+import { CreateBorrowingDto } from './dto/create-borrowing.dto';
 
 @ApiTags('borrowings')
 @Controller('borrowings')

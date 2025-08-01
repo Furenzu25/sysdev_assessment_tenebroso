@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { MembersService } from './members.service';
-import { CreateMemberDto } from '../dto/create-member.dto';
+import { CreateMemberDto } from './dto/create-member.dto';
 
 @ApiTags('members')
 @Controller('members')
