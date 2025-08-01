@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
+import { BusinessExceptionFilter } from './common/filters/business-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { LoggerService } from './common/services/logger.service';
 
@@ -27,8 +28,8 @@ async function bootstrap() {
     },
   }));
 
-  // Global exception filter
-  app.useGlobalFilters(new PrismaExceptionFilter());
+  // Global exception filters (order matters - Prisma first, then business logic)
+  app.useGlobalFilters(new PrismaExceptionFilter(), new BusinessExceptionFilter());
 
   // Global interceptor for consistent responses
   app.useGlobalInterceptors(new TransformInterceptor());

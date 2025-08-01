@@ -7,36 +7,35 @@ export class MembersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createMemberDto: CreateMemberDto) {
-    // Check if email already exists
-    const existingEmail = await this.prisma.member.findUnique({
-      where: { email: createMemberDto.email }
-    });
-    if (existingEmail) {
-      throw new ConflictException('Email already exists');
-    }
-
-    // Check if membership number already exists
-    const existingMembership = await this.prisma.member.findUnique({
-      where: { membershipNumber: createMemberDto.membershipNumber }
-    });
-    if (existingMembership) {
-      throw new ConflictException('Membership number already exists');
-    }
-
-    return this.prisma.member.create({
-      data: createMemberDto,
-      include: {
-        borrowings: {
-          include: {
-            edition: {
-              include: {
-                book: true
+    try {
+      // Prisma handles unique constraints (email, membershipNumber) at database level
+      const member = await this.prisma.member.create({
+        data: createMemberDto,
+        include: {
+          borrowings: {
+            include: {
+              edition: {
+                include: {
+                  book: true
+                }
               }
             }
           }
         }
-      }
-    });
+      });
+
+      return member;
+    } catch (error) {
+      // Log the error for debugging
+      console.error('Error creating member:', {
+        error: error.message,
+        code: error.code,
+        data: createMemberDto
+      });
+      
+      // Re-throw the error to be handled by the exception filter
+      throw error;
+    }
   }
 
   async findAll() {
@@ -105,32 +104,7 @@ export class MembersService {
     // Check if member exists
     await this.findOne(id);
 
-    // Check for email conflicts if email is being updated
-    if (updateMemberDto.email) {
-      const existingEmail = await this.prisma.member.findFirst({
-        where: {
-          email: updateMemberDto.email,
-          id: { not: id }
-        }
-      });
-      if (existingEmail) {
-        throw new ConflictException('Email already exists');
-      }
-    }
-
-    // Check for membership number conflicts if membership number is being updated
-    if (updateMemberDto.membershipNumber) {
-      const existingMembership = await this.prisma.member.findFirst({
-        where: {
-          membershipNumber: updateMemberDto.membershipNumber,
-          id: { not: id }
-        }
-      });
-      if (existingMembership) {
-        throw new ConflictException('Membership number already exists');
-      }
-    }
-
+    // Prisma handles unique constraints at database level
     return this.prisma.member.update({
       where: { id },
       data: updateMemberDto,

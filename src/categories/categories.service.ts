@@ -7,14 +7,7 @@ export class CategoriesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async create(createCategoryDto: CreateCategoryDto) {
-    const existingCategory = await this.prisma.category.findUnique({
-      where: { name: createCategoryDto.name },
-    });
-
-    if (existingCategory) {
-      throw new ConflictException('Category name already exists');
-    }
-
+    // Prisma handles unique constraints (name) at database level
     return this.prisma.category.create({
       data: createCategoryDto,
     });
@@ -44,16 +37,7 @@ export class CategoriesService {
   async update(id: string, updateCategoryDto: Partial<CreateCategoryDto>) {
     const category = await this.findOne(id);
 
-    if (updateCategoryDto.name && updateCategoryDto.name !== category.name) {
-      const existingCategory = await this.prisma.category.findUnique({
-        where: { name: updateCategoryDto.name },
-      });
-
-      if (existingCategory) {
-        throw new ConflictException('Category name already exists');
-      }
-    }
-
+    // Prisma handles unique constraints at database level
     return this.prisma.category.update({
       where: { id },
       data: updateCategoryDto,

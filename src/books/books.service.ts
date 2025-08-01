@@ -7,16 +7,7 @@ export class BooksService {
   constructor(private prisma: PrismaService) {}
 
   async create(createBookDto: CreateBookDto) {
-    // Check if ISBN already exists
-    if (createBookDto.isbn) {
-      const existingBook = await this.prisma.book.findUnique({
-        where: { isbn: createBookDto.isbn }
-      });
-      if (existingBook) {
-        throw new ConflictException('ISBN already exists');
-      }
-    }
-
+    // Prisma handles unique constraints (ISBN) at database level
     return this.prisma.book.create({
       data: createBookDto,
       include: {
@@ -132,19 +123,7 @@ export class BooksService {
     // Check if book exists
     await this.findOne(id);
 
-    // Check for ISBN conflicts if ISBN is being updated
-    if (updateBookDto.isbn) {
-      const existingBook = await this.prisma.book.findFirst({
-        where: {
-          isbn: updateBookDto.isbn,
-          id: { not: id }
-        }
-      });
-      if (existingBook) {
-        throw new ConflictException('ISBN already exists');
-      }
-    }
-
+    // Prisma handles unique constraints at database level
     return this.prisma.book.update({
       where: { id },
       data: updateBookDto,
