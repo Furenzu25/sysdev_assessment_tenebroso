@@ -1,155 +1,229 @@
-# SysDev Assessment Backend
+# Library Management System API
 
-A NestJS backend application with Prisma ORM and PostgreSQL database.
+A comprehensive library management system built with NestJS, Prisma, and PostgreSQL. This system provides full CRUD operations for managing books, members, borrowings, and categories with advanced business logic and validation.
 
-## Features
+## 🚀 Features
 
-- 🚀 **NestJS** - Progressive Node.js framework
-- 🗄️ **Prisma** - Type-safe database client
-- 📊 **PostgreSQL** - Reliable database
-- 📚 **Swagger** - API documentation
-- ✅ **Validation** - Request validation with class-validator
-- 🔧 **Configuration** - Environment-based configuration
+### Core Functionality
+- **Books Management**: Create, read, update, delete books with categories and authors
+- **Members Management**: Manage library members with borrowing history
+- **Borrowing System**: Complete borrowing workflow with fine calculation
+- **Categories**: Organize books by categories/genres
+- **Inventory Tracking**: Track book editions, stock quantities, and availability
 
-## Prerequisites
+### Advanced Features
+- **Fine Calculation**: Automatic overdue fine calculation ($0.50/day)
+- **Borrowing Limits**: Maximum 5 books per member
+- **Overdue Prevention**: Members with overdue books cannot borrow new books
+- **Lost Book Handling**: Replacement cost calculation (50% of book price)
+- **Real-time Inventory**: Automatic stock updates on borrow/return
+- **Comprehensive Logging**: Detailed operation logging
+- **API Documentation**: Interactive Swagger UI
+
+### Technical Features
+- **Type Safety**: Full TypeScript implementation
+- **Data Validation**: Comprehensive input validation with class-validator
+- **Error Handling**: Graceful error handling with custom exception filters
+- **Database Transactions**: ACID-compliant operations
+- **RESTful API**: Standard REST endpoints with proper HTTP status codes
+- **CORS Support**: Cross-origin resource sharing enabled
+- **Environment Configuration**: Flexible environment-based configuration
+
+## 📋 Prerequisites
 
 - Node.js (v18 or higher)
-- PostgreSQL database
+- PostgreSQL (v12 or higher)
 - npm or yarn
 
-## Setup Instructions
+## 🛠️ Installation
 
-### 1. Install Dependencies
-
-```bash
-npm install
-```
-
-### 2. Environment Configuration
-
-Create a `.env` file in the root directory:
-
-```env
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/sysdev_assessment_db"
-
-# Application
-PORT=3000
-NODE_ENV=development
-
-# JWT (for authentication if needed later)
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-JWT_EXPIRES_IN=7d
-```
-
-### 3. Database Setup
-
-1. **Create PostgreSQL Database:**
-   ```sql
-   CREATE DATABASE sysdev_assessment_db;
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd sysdev_assessment_tenebroso
    ```
 
-2. **Generate Prisma Client:**
+2. **Install dependencies**
    ```bash
-   npx prisma generate
+   npm install
    ```
 
-3. **Run Database Migrations:**
+3. **Set up environment variables**
    ```bash
+   cp .env.example .env
+   ```
+   
+   Update `.env` with your database configuration:
+   ```env
+   DATABASE_URL="postgresql://username:password@localhost:5432/library_db"
+   PORT=3000
+   NODE_ENV=development
+   ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+   ```
+
+4. **Set up the database**
+   ```bash
+   # Create database
+   createdb library_db
+   
+   # Run migrations
    npx prisma migrate dev --name init
+   
+   # Generate Prisma client
+   npx prisma generate
+   
+   # Seed the database (optional)
+   npm run seed
    ```
 
-### 4. Start the Application
+5. **Start the application**
+   ```bash
+   # Development mode
+   npm run start:dev
+   
+   # Production build
+   npm run build
+   npm run start:prod
+   ```
 
-**Development mode:**
+## 📚 API Endpoints
+
+### Application
+- `GET /` - Hello message
+- `GET /health` - Health check
+- `GET /stats` - Library statistics
+
+### Categories
+- `GET /categories` - Get all categories
+- `POST /categories` - Create a new category
+- `GET /categories/:id` - Get category by ID
+- `PATCH /categories/:id` - Update category
+- `DELETE /categories/:id` - Delete category
+
+### Books
+- `GET /books` - Get all books
+- `POST /books` - Create a new book
+- `GET /books/search` - Search books
+- `GET /books/isbn/:isbn` - Get book by ISBN
+- `GET /books/:id` - Get book by ID
+- `PATCH /books/:id` - Update book
+- `DELETE /books/:id` - Delete book
+- `POST /books/:id/authors` - Add author to book
+- `DELETE /books/:id/authors/:authorId` - Remove author from book
+
+### Members
+- `GET /members` - Get all members
+- `POST /members` - Create a new member
+- `GET /members/search` - Search members
+- `GET /members/:id` - Get member by ID
+- `GET /members/:id/borrowings` - Get member's borrowing history
+- `PATCH /members/:id` - Update member
+- `DELETE /members/:id` - Delete member
+
+### Borrowings
+- `GET /borrowings` - Get all borrowings
+- `POST /borrowings` - Create a new borrowing
+- `GET /borrowings/overdue` - Get overdue books
+- `GET /borrowings/status/:status` - Get borrowings by status
+- `GET /borrowings/member/:memberId` - Get member's borrowings
+- `GET /borrowings/:id` - Get borrowing by ID
+- `POST /borrowings/:id/return` - Return a book
+- `POST /borrowings/:id/lost` - Mark book as lost
+- `GET /borrowings/stats/overview` - Get borrowing statistics
+
+## 🔧 Configuration
+
+### Environment Variables
+- `DATABASE_URL`: PostgreSQL connection string
+- `PORT`: Application port (default: 3000)
+- `NODE_ENV`: Environment (development/production)
+- `ALLOWED_ORIGINS`: Comma-separated list of allowed CORS origins
+
+### Database Schema
+The system uses a comprehensive database schema with the following main entities:
+- **Members**: Library patrons with contact information
+- **Categories**: Book categories/genres
+- **Publishers**: Book publishers
+- **Authors**: Book authors
+- **Books**: Main book information
+- **BookAuthors**: Many-to-many relationship between books and authors
+- **Editions**: Book editions with inventory tracking
+- **Borrowings**: Borrowing records with status tracking
+
+## 🧪 Testing
+
+### Manual Testing
+1. Start the application: `npm run start:dev`
+2. Open Swagger UI: http://localhost:3000/api
+3. Test endpoints using the interactive interface
+
+### API Testing Examples
 ```bash
-npm run start:dev
+# Create a category
+curl -X POST http://localhost:3000/categories \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Fiction", "description": "Fictional literature"}'
+
+# Create a book
+curl -X POST http://localhost:3000/books \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Sample Book", "isbn": "978-1234567890", "categoryId": "category-id"}'
+
+# Create a member
+curl -X POST http://localhost:3000/members \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "firstName": "John", "lastName": "Doe", "membershipNumber": "MEM001"}'
 ```
 
-**Production mode:**
+## 📊 Business Rules
+
+### Borrowing Rules
+- Members can borrow up to 5 books simultaneously
+- Members with overdue books cannot borrow new books
+- Books are automatically returned after 30 days (configurable)
+- Overdue fines are calculated at $0.50 per day
+
+### Inventory Rules
+- Book availability is tracked in real-time
+- Stock quantities are automatically updated on borrow/return
+- Lost books incur a replacement cost (50% of book price)
+
+### Data Integrity
+- Foreign key constraints ensure data consistency
+- Unique constraints prevent duplicate entries
+- Soft deletes maintain referential integrity
+
+## 🚀 Deployment
+
+### Production Build
 ```bash
 npm run build
 npm run start:prod
 ```
 
-## API Documentation
-
-Once the application is running, you can access:
-
-- **API Documentation:** http://localhost:3000/api
-- **Health Check:** http://localhost:3000/health
-
-## Available Scripts
-
-- `npm run build` - Build the application
-- `npm run start` - Start the application
-- `npm run start:dev` - Start in development mode with hot reload
-- `npm run start:debug` - Start in debug mode
-- `npm run start:prod` - Start in production mode
-- `npm run test` - Run unit tests
-- `npm run test:e2e` - Run end-to-end tests
-- `npm run lint` - Run ESLint
-- `npm run format` - Format code with Prettier
-
-## Project Structure
-
-```
-src/
-├── app.controller.ts    # Main application controller
-├── app.service.ts       # Main application service
-├── app.module.ts        # Root application module
-├── main.ts             # Application entry point
-└── prisma/
-    ├── prisma.service.ts # Prisma database service
-    └── prisma.module.ts  # Prisma module
-
-prisma/
-└── schema.prisma       # Database schema definition
+### Docker Deployment
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY dist ./dist
+EXPOSE 3000
+CMD ["node", "dist/src/main.js"]
 ```
 
-## Database Models
+## 🤝 Contributing
 
-The application includes the following models:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
 
-- **User** - User management
-- **Post** - Content management
+## 📄 License
 
-## Development
+This project is licensed under the MIT License.
 
-### Adding New Features
+## 🆘 Support
 
-1. Create controllers in `src/controllers/`
-2. Create services in `src/services/`
-3. Create DTOs in `src/dto/`
-4. Update modules as needed
-
-### Database Changes
-
-1. Modify `prisma/schema.prisma`
-2. Generate Prisma client: `npx prisma generate`
-3. Create migration: `npx prisma migrate dev --name <migration-name>`
-
-## Testing
-
-```bash
-# Unit tests
-npm run test
-
-# E2E tests
-npm run test:e2e
-
-# Test coverage
-npm run test:cov
-```
-
-## Deployment
-
-1. Set environment variables for production
-2. Build the application: `npm run build`
-3. Start in production mode: `npm run start:prod`
-
-## Contributing
-
-1. Follow the existing code style
-2. Add tests for new features
-3. Update documentation as needed
+For support and questions, please open an issue in the repository.

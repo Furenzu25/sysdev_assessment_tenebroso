@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -14,25 +13,157 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+// Library Members/Patrons
+model Member {
   id        String   @id @default(cuid())
   email     String   @unique
-  name      String?
+  firstName String
+  lastName  String
+  phone     String?
+  address   String?
+  membershipNumber String @unique
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  posts Post[]
-
-  @@map("users")
+  
+  // Relations
+  borrowings Borrowing[]
+  
+  @@map("members")
 }
 
-model Post {
+// Book Categories/Genres
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  books Book[]
+  
+  @@map("categories")
+}
+
+// Publishers
+model Publisher {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
+  name      String   @unique
+  address   String?
+  phone     String?
+  email     String?
+  website   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  userId    String
-  user User @relation(fields: [userId], references: [id])
-  @@map("posts")
+  
+  // Relations
+  editions Edition[]
+  
+  @@map("publishers")
+}
+
+// Authors
+model Author {
+  id        String   @id @default(cuid())
+  firstName String
+  lastName  String
+  biography String?
+  birthDate DateTime?
+  deathDate DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations - Many-to-Many with Books
+  bookAuthors BookAuthor[]
+  
+  @@map("authors")
+}
+
+// Books (Main book information)
+model Book {
+  id          String   @id @default(cuid())
+  title       String
+  isbn        String?  @unique
+  description String?
+  language    String   @default("English")
+  pageCount   Int?
+  publishedYear Int?
+  categoryId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  category    Category?    @relation(fields: [categoryId], references: [id])
+  bookAuthors BookAuthor[]
+  editions    Edition[]
+  
+  @@map("books")
+}
+
+// Many-to-Many relationship between Books and Authors
+model BookAuthor {
+  id       String @id @default(cuid())
+  bookId   String
+  authorId String
+  role     String? // e.g., "Author", "Editor", "Translator"
+  
+  // Relations
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  author Author @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  @@unique([bookId, authorId])
+  @@map("book_authors")
+}
+
+// Book Editions (Different versions/printings of the same book)
+model Edition {
+  id          String   @id @default(cuid())
+  bookId      String
+  publisherId String?
+  editionNumber String? // e.g., "1st Edition", "2nd Edition"
+  format      String?  // e.g., "Hardcover", "Paperback", "E-book"
+  isbn        String?  @unique
+  publishedDate DateTime?
+  price       Decimal? @db.Decimal(10, 2)
+  stockQuantity Int    @default(0)
+  availableQuantity Int @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  book      Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  publisher Publisher? @relation(fields: [publisherId], references: [id])
+  borrowings Borrowing[]
+  
+  @@map("editions")
+}
+
+// Borrowing Records
+model Borrowing {
+  id        String   @id @default(cuid())
+  memberId  String
+  editionId String
+  borrowedAt DateTime @default(now())
+  dueDate   DateTime
+  returnedAt DateTime?
+  fineAmount Decimal? @db.Decimal(10, 2) @default(0)
+  status    BorrowingStatus @default(BORROWED)
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  member  Member  @relation(fields: [memberId], references: [id])
+  edition Edition @relation(fields: [editionId], references: [id])
+  
+  @@map("borrowings")
+}
+
+// Borrowing Status Enum
+enum BorrowingStatus {
+  BORROWED
+  RETURNED
+  OVERDUE
+  LOST
 }

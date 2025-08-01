@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete, Put } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
@@ -29,19 +29,23 @@ export class AppController {
     };
   }
 
-  @Get('users')
-  @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'Returns all users' })
-  async getUsers() {
-    return this.prisma.user.findMany();
-  }
+  @Get('stats')
+  @ApiOperation({ summary: 'Get library statistics' })
+  @ApiResponse({ status: 200, description: 'Returns library statistics' })
+  async getLibraryStats() {
+    const [totalBooks, totalMembers, totalBorrowings, activeBorrowings] = await Promise.all([
+      this.prisma.book.count(),
+      this.prisma.member.count(),
+      this.prisma.borrowing.count(),
+      this.prisma.borrowing.count({ where: { status: 'BORROWED' } })
+    ]);
 
-  @Post('users')
-  @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({ status: 201, description: 'User created successfully' })
-  async createUser(@Body() data: { email: string; name?: string }) {
-    return this.prisma.user.create({
-      data,
-    });
+    return {
+      totalBooks,
+      totalMembers,
+      totalBorrowings,
+      activeBorrowings,
+      timestamp: new Date().toISOString()
+    };
   }
 }
